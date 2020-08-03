@@ -1,7 +1,7 @@
 import XCTest
 import class Foundation.Bundle
 
-final class XcodeBetaCarthageFixTests: XCTestCase {
+final class xbarTests: XCTestCase {
     func testExample() throws {
         // This is an example of a functional test case.
         // Use XCTAssert and related functions to verify your tests produce the correct
@@ -12,7 +12,7 @@ final class XcodeBetaCarthageFixTests: XCTestCase {
             return
         }
 
-        let fooBinary = productsDirectory.appendingPathComponent("XcodeBetaCarthageFix")
+        let fooBinary = productsDirectory.appendingPathComponent("xbar")
 
         let process = Process()
         process.executableURL = fooBinary

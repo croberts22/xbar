@@ -1,7 +1,7 @@
 import XCTest
 
-import XcodeBetaCarthageFixTests
+import xbarTests
 
 var tests = [XCTestCaseEntry]()
-tests += XcodeBetaCarthageFixTests.allTests()
+tests += xbarTests.allTests()
 XCTMain(tests)

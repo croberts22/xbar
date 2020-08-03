@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "XcodeBetaCarthageFix"
-               BuildableName = "XcodeBetaCarthageFix"
-               BlueprintName = "XcodeBetaCarthageFix"
+               BlueprintIdentifier = "xbar"
+               BuildableName = "xbar"
+               BlueprintName = "xbar"
                ReferencedContainer = "container:">
             </BuildableReference>
          </BuildActionEntry>
@@ -28,9 +28,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "XcodeBetaCarthageFixTests"
-               BuildableName = "XcodeBetaCarthageFixTests"
-               BlueprintName = "XcodeBetaCarthageFixTests"
+               BlueprintIdentifier = "xbarTests"
+               BuildableName = "xbarTests"
+               BlueprintName = "xbarTests"
                ReferencedContainer = "container:">
             </BuildableReference>
          </BuildActionEntry>
@@ -46,9 +46,9 @@
             skipped = "NO">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "XcodeBetaCarthageFixTests"
-               BuildableName = "XcodeBetaCarthageFixTests"
-               BlueprintName = "XcodeBetaCarthageFixTests"
+               BlueprintIdentifier = "xbarTests"
+               BuildableName = "xbarTests"
+               BlueprintName = "xbarTests"
                ReferencedContainer = "container:">
             </BuildableReference>
          </TestableReference>
@@ -69,12 +69,50 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "XcodeBetaCarthageFix"
-            BuildableName = "XcodeBetaCarthageFix"
-            BlueprintName = "XcodeBetaCarthageFix"
+            BlueprintIdentifier = "xbar"
+            BuildableName = "xbar"
+            BlueprintName = "xbar"
             ReferencedContainer = "container:">
          </BuildableReference>
       </BuildableProductRunnable>
+      <CommandLineArguments>
+         <CommandLineArgument
+            argument = "/Users/spacepyro/Projects/work/mmf/mmf-ios/iMapMy3/Frameworks/UacfPanamaWorkoutSaving/UacfPanamaWorkoutSaving.xcodeproj"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/spacepyro/Projects/work/mmf/mmf-ios/iMapMy3/Frameworks/UacfRecordingEventLog/UacfRecordingEventLog.xcodeproj"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/spacepyro/Projects/work/mmf/mmf-ios/iMapMy3/Frameworks/UacfRecordingStudio/UacfRecordingStudio.xcodeproj"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/spacepyro/Projects/work/mmf/mmf-ios/iMapMy3/Frameworks/UacfAchievements/UacfAchievements.xcodeproj"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/spacepyro/Projects/work/mmf/mmf-ios/iMapMy3/Frameworks/RecordingStudioConfiguration/RecordingStudioConfiguration.xcodeproj"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/spacepyro/Projects/work/mmf/mmf-ios/iMapMy3/Frameworks/UacfStudioTesting/UacfStudioTesting.xcodeproj"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/spacepyro/Projects/work/mmf/mmf-ios/iMapMy3/Frameworks/WorkoutFeedback/WorkoutFeedback.xcodeproj"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/spacepyro/Projects/work/mmf/mmf-ios/iMapMy3/Frameworks/UacfFitnessStudio/UacfFitnessStudio.xcodeproj"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
+            argument = "/Users/spacepyro/Projects/work/mmf/mmf-ios/iMapMy3/Frameworks/MMFCategories/MMFCategories.xcodeproj"
+            isEnabled = "YES">
+         </CommandLineArgument>
+      </CommandLineArguments>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -86,9 +124,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "XcodeBetaCarthageFix"
-            BuildableName = "XcodeBetaCarthageFix"
-            BlueprintName = "XcodeBetaCarthageFix"
+            BlueprintIdentifier = "xbar"
+            BuildableName = "xbar"
+            BlueprintName = "xbar"
             ReferencedContainer = "container:">
          </BuildableReference>
       </BuildableProductRunnable>
