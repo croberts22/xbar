@@ -26,14 +26,20 @@ final class ProjectController: Controller {
     private let arguments: [String]
     private let projects: [ProjectPathTuple]
     
+    // FIXME: This is static, but we could adjust this to be dynamic based on user input.
+    private let acceptableDeploymentVersion: String = "11.0"
+    
     // MARK: - Initializers
     
     init() throws {
         arguments = []
         
-        print("No arguments found, automatically looking for project files in Carthage/Checkouts...")
+        let allCarthageProjectsCommand: String = "find Carthage/Checkouts -type d -name \"*xcodeproj\" -print"
         
-        let output: String = try shellOut(to: ShellOutCommand(string: "find Carthage/Checkouts -type d -name \"*xcodeproj\" -print"))
+        print("No arguments found, automatically looking for project files in Carthage/Checkouts using the following command:")
+        print("$ \(allCarthageProjectsCommand)\n")
+        
+        let output: String = try shellOut(to: ShellOutCommand(string: allCarthageProjectsCommand))
         let projectPaths: [String] = output.components(separatedBy: .newlines)
         projects = try projectPaths.compactMap { (path) -> (ProjectPathTuple)? in
             let project: XcodeProj = try XcodeProj(path: Path(path))
@@ -53,11 +59,11 @@ final class ProjectController: Controller {
     
     func run() {
         let architectures: [Architecture] = Architecture.allCases
-        print("Removing architecture \(architectures) from \(projects.count) projects...")
+        print("Removing architectures `\(architectures.map { $0.rawValue }.joined(separator: ", "))` from \(projects.count) projects...\n")
         projects.forEach { project in
             print("Reading project: \(project.path)")
             var shouldSave: Bool = false
-            shouldSave = updateDeploymentTarget(to: "11.0", for: project)
+            shouldSave = updateDeploymentTarget(to: acceptableDeploymentVersion, for: project)
             
             // TODO: This is for those running beta 3+, but commenting out for now.
             // shouldSave = remove(architectures: architectures, for: project) || shouldSave
@@ -67,7 +73,7 @@ final class ProjectController: Controller {
             }
         }
         
-        print("Done! Now use the following command to rebuild your workspace:")
+        print("\nDone! Now use the following command to rebuild your workspace:")
         print("$ carthage build --cache-builds --platform iOS,watchOS")
     }
     
@@ -78,7 +84,6 @@ final class ProjectController: Controller {
         let project: XcodeProj = tuple.project
         var shouldSave: Bool = false
         
-        print("Updating iPhone deployment target to \(version) for \"\(tuple.path)\"...")
         for configuration in project.pbxproj.buildConfigurations {
             shouldSave = updateDeploymentTarget(to: version, for: configuration) || shouldSave
         }
