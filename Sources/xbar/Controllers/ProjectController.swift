@@ -12,9 +12,7 @@ import ShellOut
 
 
 enum Architecture: String, CaseIterable {
-    case armv7, armv7s, armv6, armv8
-//    case arm64, arm64e, armv7, armv7s, armv6, armv8, i386
-//    case arm64_apple_watchos_simulator = "arm64-apple-watchos-simulator"
+    case arm64, arm64e, armv7, armv7s, armv6, armv8
 }
 
 typealias ProjectPathTuple = (project: XcodeProj, path: String)
@@ -32,6 +30,9 @@ final class ProjectController: Controller {
     
     init() throws {
         arguments = []
+        
+        print("No arguments found, automatically looking for project files in Carthage/Checkouts...")
+        
         let output: String = try shellOut(to: ShellOutCommand(string: "find Carthage/Checkouts -type d -name \"*xcodeproj\" -print"))
         let projectPaths: [String] = output.components(separatedBy: .newlines)
         projects = try projectPaths.compactMap { (path) -> (ProjectPathTuple)? in
@@ -53,7 +54,18 @@ final class ProjectController: Controller {
     func run() {
         let architectures: [Architecture] = Architecture.allCases
         print("Removing architecture \(architectures) from \(projects.count) projects...")
-        projects.forEach { remove(architectures: architectures, for: $0) }
+        projects.forEach { project in
+            print("Reading project: \(project.path)")
+            var shouldSave: Bool = false
+            shouldSave = updateDeploymentTarget(to: "11.0", for: project)
+            
+            // TODO: This is for those running beta 3+, but commenting out for now.
+            // shouldSave = remove(architectures: architectures, for: project) || shouldSave
+            
+            if shouldSave {
+                save(tuple: project)
+            }
+        }
         
         print("Done! Now use the following command to rebuild your workspace:")
         print("$ carthage build --cache-builds --platform iOS,watchOS")
@@ -61,54 +73,44 @@ final class ProjectController: Controller {
     
     // MARK: - Private Methods
     
-    private func remove(architectures: [Architecture], for tuple: ProjectPathTuple) {
-        let project: XcodeProj = tuple.project
+    private func updateDeploymentTarget(to version: String, for tuple: ProjectPathTuple) -> Bool {
         
-        print("Reading project: \(tuple.path)")
+        let project: XcodeProj = tuple.project
+        var shouldSave: Bool = false
+        
+        print("Updating iPhone deployment target to \(version) for \"\(tuple.path)\"...")
         for configuration in project.pbxproj.buildConfigurations {
-            
-            var shouldSave: Bool = false
-            
-            shouldSave = updateExcludedArchsIfNeeded(adding: architectures, for: configuration)
-            shouldSave = updateDeploymentTarget(to: "11.0", for: configuration) || shouldSave
-            architectures.forEach {
-                shouldSave = updateValidArchsIfNeeded(removing: $0, for: configuration) || shouldSave
-            }
-
-            if shouldSave {
-                save(tuple: tuple, configuration: configuration)
+            shouldSave = updateDeploymentTarget(to: version, for: configuration) || shouldSave
+        }
+        
+        return shouldSave
+    }
+    
+    private func remove(architectures: [Architecture], for tuple: ProjectPathTuple) -> Bool {
+        
+        let project: XcodeProj = tuple.project
+        var shouldSave: Bool = false
+        
+        print("Adding excluded architectures for \"\(tuple.path)\"...")
+        project.pbxproj.buildConfigurations.forEach { configuration in
+            architectures.forEach { architecture in
+                shouldSave = updateValidArchsIfNeeded(for: configuration)
+                shouldSave = updateExcludedArchsIfNeeded(adding: architectures, for: configuration)
             }
             
         }
         
+        return shouldSave
     }
     
-    private func updateValidArchsIfNeeded(removing architecture: Architecture, for configuration: XCBuildConfiguration) -> Bool {
+    private func updateValidArchsIfNeeded(for configuration: XCBuildConfiguration) -> Bool {
         
         var shouldSave: Bool = false
 
-        if var validArchitectures = configuration.buildSettings["VALID_ARCHS"] as? String {
-
-            print("Found armv7 in VALID_ARCHS for \(configuration.name): \(validArchitectures)")
-
-            if let range = validArchitectures.range(of: "\(architecture) ") {
-
-                validArchitectures.removeSubrange(range)
-                configuration.buildSettings["VALID_ARCHS"] = validArchitectures
-                print("Removed \(architecture), updated VALID_ARCHS for \(configuration.buildSettings["TARGET_NAME"] ?? "") (\(configuration.name)): \(validArchitectures)")
-                shouldSave = true
-            }
-
-            let legacyArchStandardKeys: [String] = ["$(ARCHS_STANDARD)", "$(ARCHS_STANDARD_INCLUDING_64_BIT)"]
-
-            legacyArchStandardKeys.forEach { (key) in
-                if validArchitectures.contains(key) {
-                    print("Found legacy key \(key) in VALID_ARCHS, updating to use $(ARCHS_STANDARD_64_BIT)...")
-                    validArchitectures = "$(ARCHS_STANDARD_64_BIT)"
-                    shouldSave = true
-                }
-            }
-
+        if let validArchitectures = configuration.buildSettings["VALID_ARCHS"] as? String, validArchitectures.count > 0 {
+            print("Found existing deprecated `VALID_ARCHS` for \(configuration.name), clearing these out")
+            configuration.buildSettings["VALID_ARCHS"] = ""
+            shouldSave = true
         }
         
         return shouldSave
@@ -119,7 +121,7 @@ final class ProjectController: Controller {
         var shouldSave: Bool = false
         
         if let deploymentTarget = configuration.buildSettings["IPHONEOS_DEPLOYMENT_TARGET"] as? String, deploymentTarget != version {
-            print("Updating iOS deployment target to \(version) for \(configuration.buildSettings["TARGET_NAME"] ?? "") (\(configuration.name))...")
+            print("Updating iOS deployment target to \(version) for \(configuration.targetName) (\(configuration.name))...")
             configuration.buildSettings["IPHONEOS_DEPLOYMENT_TARGET"] = version
             shouldSave = true
         }
@@ -131,39 +133,30 @@ final class ProjectController: Controller {
         
         var shouldSave: Bool = false
         
-//        if configuration.buildSettings["EXCLUDED_ARCHS__EFFECTIVE_PLATFORM_SUFFIX_simulator__NATIVE_ARCH_64_BIT_x86_64__XCODE_1200"] != nil {
-//            print("No need to update, excluded archs custom variable was found.")
-//        }
-//        else {
+        func add(architecture: Architecture, toCurrentSetting settings: inout String) -> Bool {
+            if settings.contains(architecture.rawValue) == false {
+                settings.append(" \(architecture)")
+                return true
+            }
+            
+            return false
+        }
         
-        print("Updating EXCLUDED_ARCHS for \(configuration.buildSettings["TARGET_NAME"] ?? "") (\(configuration.name))...")
-        configuration.buildSettings["EXCLUDED_ARCHS"] = ""//$(inherited) " + architectures.map { $0.rawValue }.joined(separator: " ")
-            shouldSave = true
-//        }
+        var projectExcludedArchs: String = configuration.buildSettings["EXCLUDED_ARCHS"] as? String ?? ""
         
-//        var excludedArchs: String = configuration.buildSettings["EXCLUDED_ARCHS"] as? String ?? ""
-//
-//        if excludedArchs.contains(architecture.rawValue) == false {
-//
-//            print("Adding \"\(architecture)\" as an excluded archs in EXCLUDED_ARCHS...")
-//            if excludedArchs.isEmpty {
-//                excludedArchs = "\(architecture)"
-//            }
-//            else {
-//                excludedArchs += " \(architecture)"
-//            }
-//
-//            configuration.buildSettings["EXCLUDED_ARCHS"] = excludedArchs
-//            shouldSave = true
-//        }
+        architectures.forEach { architecture in
+            shouldSave = add(architecture: architecture, toCurrentSetting: &projectExcludedArchs) || shouldSave
+        }
+        
+        print("Updated values for `EXCLUDED_ARCHS` for \(configuration.targetName) (\(configuration.name).")
         
         return shouldSave
     }
     
-    private func save(tuple: ProjectPathTuple, configuration: XCBuildConfiguration) {
+    private func save(tuple: ProjectPathTuple) {
         do {
             try tuple.project.write(path: Path(tuple.path))
-            print("Saved changes for \(configuration.name)")
+            print("Saved changes for \(tuple.path).")
         }
         catch let exception {
             print("An exception occurred while trying to save changes: \(exception)")
