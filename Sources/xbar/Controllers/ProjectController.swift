@@ -63,10 +63,9 @@ final class ProjectController: Controller {
         projects.forEach { project in
             print("Reading project: \(project.path)")
             var shouldSave: Bool = false
-            shouldSave = updateDeploymentTarget(to: acceptableDeploymentVersion, for: project)
             
-            // TODO: This is for those running beta 3+, but commenting out for now.
-            // shouldSave = remove(architectures: architectures, for: project) || shouldSave
+            shouldSave = updateDeploymentTarget(to: acceptableDeploymentVersion, for: project)
+            shouldSave = exclude(architectures: architectures, for: project) || shouldSave
             
             if shouldSave {
                 save(tuple: project)
@@ -91,7 +90,7 @@ final class ProjectController: Controller {
         return shouldSave
     }
     
-    private func remove(architectures: [Architecture], for tuple: ProjectPathTuple) -> Bool {
+    private func exclude(architectures: [Architecture], for tuple: ProjectPathTuple) -> Bool {
         
         let project: XcodeProj = tuple.project
         var shouldSave: Bool = false
@@ -153,7 +152,7 @@ final class ProjectController: Controller {
             shouldSave = add(architecture: architecture, toCurrentSetting: &projectExcludedArchs) || shouldSave
         }
         
-        print("Updated values for `EXCLUDED_ARCHS` for \(configuration.targetName) (\(configuration.name).")
+        print("Updated values for `EXCLUDED_ARCHS` for \(configuration.targetName) (\(configuration.name)).")
         
         return shouldSave
     }
